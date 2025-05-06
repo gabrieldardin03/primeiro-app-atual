@@ -5,11 +5,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { HashingServiceProtocol } from 'src/auth/hash/hashing.service';
 
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prismaService : PrismaService){}
+    constructor(private readonly prismaService : PrismaService,
+        private readonly hashingService: HashingServiceProtocol
+    ){}
 
  async findAll(paginationDto: PaginationDto){
         const {limit = 10, offset = 0 } = paginationDto
