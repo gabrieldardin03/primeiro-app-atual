@@ -33,7 +33,7 @@ export class TasksService {
         })
 
         if(task?.name) return task
-        throw new HttpException("Essa tarefa não existe!", HttpStatus.NOT_FOUND)
+        throw new HttpException("", HttpStatus.NOT_FOUND)
     }
 
    async create(CreateTaskDto: CreateTaskDto){
@@ -42,7 +42,8 @@ export class TasksService {
             data:{
                 name: CreateTaskDto.name,
                 description: CreateTaskDto.description,
-                completed: false
+                completed: false,
+                userId: CreateTaskDto.userId
             }
         })
         return newTasks
@@ -66,7 +67,11 @@ export class TasksService {
             where: {
                 id: findTask.id
             },
-            data: updateTaskDto
+            data: {
+                name: updateTaskDto.name ? updateTaskDto.name : findTask.name,
+                description: updateTaskDto.description ? updateTaskDto.description : findTask.description,
+                completed: updateTaskDto.completed  ? updateTaskDto.completed : findTask.completed
+            }
         })
         return task
        } catch(e){

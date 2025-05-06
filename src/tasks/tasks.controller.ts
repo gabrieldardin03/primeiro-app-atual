@@ -1,15 +1,23 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { LoggerInterceptor } from 'src/common/interceptors/logger.interceptor';
+import { BodyCreateTaskInterceptor } from 'src/common/interceptors/body-create-task.interceptor';
+import { AddHeaderInterceptor } from 'src/common/interceptors/add-header.interceptor';
+import { AuthAdminGuard } from 'src/common/guards/admin.guard';
 
 @Controller('tasks')
+@UseInterceptors(LoggerInterceptor)
+@UseGuards(AuthAdminGuard)
 export class TasksController {
     constructor(private readonly TasksService : TasksService){}
 
     @Get()
+    @UseInterceptors(AddHeaderInterceptor)
     findAllTasks(@Query() paginationDto: PaginationDto){
+        console.log("Todas as tarefas!")
         return this.TasksService.findAll(paginationDto)
     }
 
@@ -19,6 +27,7 @@ export class TasksController {
     }
 
     @Post()
+    @UseInterceptors(BodyCreateTaskInterceptor)
     createTasks(@Body() CreateTaskDto: CreateTaskDto){
         return this.TasksService.create(CreateTaskDto)
     }

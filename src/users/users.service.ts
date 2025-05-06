@@ -5,12 +5,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { useContainer } from 'class-validator';
 import { HashingServiceProtocol } from 'src/auth/hash/hashing.service';
 
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly prismaService : PrismaService,
+    constructor(
+        private  prismaService : PrismaService,
         private readonly hashingService: HashingServiceProtocol
     ){}
 
@@ -31,6 +33,13 @@ export class UsersService {
         const user = await this.prismaService.user.findFirst({
             where: {
                 id:id
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                active: true,
+                task: true
             }
         })
 
@@ -45,7 +54,14 @@ export class UsersService {
                 name: CreateuserDto.name,
                 adress: CreateuserDto.adress,
                 email: CreateuserDto.email,
+                passwordHash: CreateuserDto.password,
                 active: false
+            },
+            select:{
+                id: true,
+                name: true,
+                email: true,
+                active: true
             }
         })
         return newusers
@@ -56,22 +72,40 @@ export class UsersService {
 
    async update(id: number, updateuserDto: UpdateUserDto){
        try{
-        const finduser = await this.prismaService.user.findFirst({
+        const user = await this.prismaService.user.findFirst({
             where: {
                 id: id
             }
         })
         
-        if(!finduser)
+        if(!user)
             throw new HttpException("Esse usuário não existe!", HttpStatus.NOT_FOUND)
 
-        const user = await  this.prismaService.user.update({
+        const dataUser: { name?: string, passwordHash?: string} = {
+            name: updateuserDto.name ? updateuserDto.name : user.name
+        }
+
+        if (updateuserDto?.password){
+            const passwordHash = await this.hashingService.hash(updateuserDto?.password)
+            dataUser['passwordHash'] = passwordHash
+        }
+
+        const updateUser = await  this.prismaService.user.update({
             where: {
-                id: finduser.id
+                id: user.id
             },
-            data: updateuserDto
+            data: {
+                name: dataUser.name,
+                passwordHash: dataUser?.passwordHash ? dataUser?.passwordHash : user.passwordHash
+            },
+            select:{
+                id:true,
+                name: true,
+                email: true
+            }
+
         })
-        return user
+        return updateUser
        } catch(e){
         throw new HttpException("Não foi possivel atualizar o usuário!", HttpStatus.BAD_REQUEST)
        }
@@ -80,18 +114,18 @@ export class UsersService {
 
    async delete(id: number){
         try{
-            const finduser = await this.prismaService.user.findFirst({
+            const user = await this.prismaService.user.findFirst({
                 where: {
                     id: id
                 }
             })
 
-            if(!finduser)
+            if(!user)
                 throw new HttpException("Esse usuário não existe!", HttpStatus.NOT_FOUND)
 
                 await this.prismaService.user.delete({
                     where:{
-                        id: finduser.id
+                        id: user.id
                     }
                 })
 

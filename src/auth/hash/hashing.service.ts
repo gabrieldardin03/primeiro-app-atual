@@ -1,6 +1,8 @@
-export abstract class HashingServiceProtocol{
+import { promises } from "dns";
+
+
+export abstract class HashingServiceProtocol {
     abstract hash(password: string): Promise<string>
 
-    abstract compare(password: string, passwordHash:string):Promise<boolean>
-
+    abstract compare(password: string, passwordHash: string): Promise<boolean>
 }
